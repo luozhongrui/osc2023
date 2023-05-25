@@ -33,7 +33,7 @@ clean:
 	
 
 run: 			all
-	$(EMULATOR) -M raspi3b -kernel kernel8.img -display none  -serial null -serial stdio -initrd initramfs.cpio
+	$(EMULATOR) -M raspi3b -kernel kernel8.img  -serial null -serial stdio -initrd initramfs.cpio
 
 deploy: 		all
 	cp ./kernel8.img  /Volumes/NO\ NAME

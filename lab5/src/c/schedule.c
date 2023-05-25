@@ -5,7 +5,7 @@
 #include "string.h"
 #include "cpio.h"
 #include "syscall.h"
-#include "mbox.h"
+#include "mailbox.h"
 
 struct task_struct *task_pool[TASK_POOL_SIZE];
 
@@ -100,8 +100,7 @@ void sys_mbox_call(struct trapframe *tf)
 {
     unsigned char ch = (unsigned char)tf->x[0];
     unsigned int *mbox = (unsigned int *)tf->x[1];
-    int ret = mboxc_mbox_call(ch, mbox); // defined in mbox.c
-    tf->x[0] = ret;
+    tf->x[0] = sys_mailbox_config(ch, mbox);
 }
 
 void sys_kill(struct trapframe *tf)
@@ -233,7 +232,7 @@ void kill_zombie()
     {
         if (task_pool[i]->state == ZOMBIE)
         {
-            printf("process ID: %d killed!\n", i);
+            // printf("process ID: %d killed!\n", i);
 
             km_free(task_pool[i]->kstack);
             km_free(task_pool[i]->ustack);
@@ -250,9 +249,9 @@ void idle_thread()
     // int read_size = uart_read(uart_read_buffer, 5);
     // printf("[UART_READ] %d %s\n", read_size, uart_read_buffer);
 
-    char *uart_write_buffer = "Hello World !";
-    int write_size = uart_write(uart_write_buffer, strlen(uart_write_buffer));
-    printf("[UART_WRITE] %d\n", write_size);
+    // char *uart_write_buffer = "Hello World !";
+    // int write_size = uart_write(uart_write_buffer, strlen(uart_write_buffer));
+    // printf("[UART_WRITE] %d\n", write_size);
 
     enable_core_timer();
 

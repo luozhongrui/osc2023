@@ -88,11 +88,11 @@ struct page *block_allocation(int order)
             list_add_tail(&bottom->list, &free_buddy_list[current_order]);
 
             // printf("[block_allocation] redundant block(page: %d, order: %d) freed\n",
-                //    bottom->page_number, bottom->order);
+            //    bottom->page_number, bottom->order);
         }
 
         // printf("[block_allocation] block(page: %d, order: %d) allocated\n",
-            //    temp_block->page_number, temp_block->order);
+        //    temp_block->page_number, temp_block->order);
         // printf("[block_allocation] done\n\n");
 
         return temp_block;
@@ -114,7 +114,7 @@ void block_free(struct page *block)
     }
 
     // printf("[block_free] block(page: %d, order: %d) to be freed\n",
-        //    block->page_number, block->order);
+    //    block->page_number, block->order);
 
     block->used = 0;
     // remember to clean the point to the allocator !!!
@@ -140,7 +140,7 @@ void block_free(struct page *block)
         }
 
         // printf("[block_free] block(page: %d, order: %d) and block(page: %d, order: %d) merged\n",
-            //    top->page_number, top->order, bottom->page_number, bottom->order);
+        //    top->page_number, top->order, bottom->page_number, bottom->order);
 
         bottom->order = -1;
         top->order++;
@@ -189,7 +189,7 @@ void *object_allocation(int token)
             // block i saves the offset number for block i+1
             for (int i = 0; i < allocator->max_object_count; i++)
                 *(int *)(temp_page->start_address + i * allocator->object_size) =
-                        (i + 1) * allocator->object_size;
+                    (i + 1) * allocator->object_size;
         }
 
         allocator->current_page = temp_page;
@@ -198,10 +198,10 @@ void *object_allocation(int token)
     struct page *current_page = allocator->current_page;
     void *object = current_page->first_free;
 
-    // if first_free points to 0x8000 now, and it stores 64, 
+    // if first_free points to 0x8000 now, and it stores 64,
     // which is the location to the next free block behind first_free,
-    // then first_free will point to 0x8040 afterward 
-    current_page->first_free = current_page->start_address + 
+    // then first_free will point to 0x8040 afterward
+    current_page->first_free = current_page->start_address +
                                *(int *)(current_page->first_free);
     current_page->object_count++;
 
@@ -262,11 +262,11 @@ void object_free(void *object)
     else
     {
         // printf("[object_free] status 3\n\n");
-        
+
         *(int *)object = page->first_free - page->start_address;
         page->first_free = object;
     }
-    
+
     page->object_count--;
 
     list_crop(&page->list, &page->list);

@@ -18,9 +18,9 @@ struct cpu_context
     unsigned long x26;
     unsigned long x27;
     unsigned long x28;
-    unsigned long fp;
-    unsigned long lr;
-    unsigned long sp;
+    unsigned long fp; // frame pointer
+    unsigned long lr; // link register
+    unsigned long sp; // stack pointer
 };
 
 enum task_state

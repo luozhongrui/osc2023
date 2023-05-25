@@ -198,7 +198,7 @@ void sys_uart_read(struct trapframe *tf)
     char *buffer = tf->x[0];
     int size = tf->x[1];
     int count = 0;
-
+    enable_irq(); // enable interrupt to avoid blocking
     for (int i = 0; i < size; i++)
     {
         count++;
@@ -207,6 +207,7 @@ void sys_uart_read(struct trapframe *tf)
             break;
     }
     buffer[count] = '\0';
+    disable_irq(); // disable interrupt to avoid deadlock
     tf->x[0] = count;
 }
 

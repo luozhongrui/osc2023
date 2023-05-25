@@ -47,6 +47,17 @@ kill:
     svc 0
     ret
 
+.global signal
+signal:
+    mov x8, SYS_SIGNAL
+    svc 0
+    ret
+.global posix_kill
+posix_kill:
+    mov x8, SYS_POSIX_KILL
+    svc 0
+    ret
+
 .global schedule
 schedule:
     mov x8, SYS_SCHEDULE
