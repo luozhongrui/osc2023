@@ -1,13 +1,13 @@
 #ifndef MM_H
 #define MM_H
 
-#define MEMORY_START 0xA0000
+#define MEMORY_START 0x0
 
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1 << PAGE_SHIFT)
 #define MAX_BUDDY_ORDER 9
 #define MAX_BLOCK_SIZE (1 << MAX_BUDDY_ORDER)
-#define MAX_PAGE_NUMBER 4096
+#define MAX_PAGE_NUMBER (0x3C000000 / PAGE_SIZE)
 
 #define MIN_OBJECT_ORDER 4
 #define MAX_OBJECT_ORDER 11
@@ -57,4 +57,5 @@ void *km_allocation(int size);
 void km_free(void *address);
 
 int find_buddy(int page_number, int order);
+void memory_reserve(void *start, void *end);
 #endif
