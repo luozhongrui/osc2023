@@ -93,6 +93,11 @@ struct page *block_allocation(int order)
 
         // free block found
         struct page *temp_block = (struct page *)free_buddy_list[current_order].next;
+        while (temp_block->used == 1)
+        {
+            temp_block = (struct page *)temp_block->list.next;
+        }
+
         list_crop(&temp_block->list, &temp_block->list);
 
         temp_block->used = 1;
@@ -353,15 +358,16 @@ int find_buddy(int page_number, int order)
 void memory_reserve(void *start, void *end)
 {
     int indx = (long)(start - MEMORY_START) / PAGE_SIZE;
-    int page = (long)((end + PAGE_SIZE - 1) - start) / PAGE_SIZE;
-    printf("reserve indx: %d, page: %d\n", indx, page);
-    for (int i = 0; i < page; i += MAX_BLOCK_SIZE)
+    int page = (long)(end + PAGE_SIZE - 1 - start) / PAGE_SIZE;
+
+    for (int i = 0; i < page; i++)
     {
-        bookkeep[indx & i].used = 1;
-        bookkeep[indx & i].order = -1;
-        bookkeep[indx & i].allocator = NULL;
-        bookkeep[indx & i].object_count = 0;
-        bookkeep[indx & i].first_free = NULL;
-        list_crop(&bookkeep[indx & i].list, &bookkeep[indx & i].list);
+        bookkeep[indx + i].used = 1;
+        bookkeep[indx + i].order = -1;
+        bookkeep[indx + i].allocator = NULL;
+        bookkeep[indx + i].object_count = 0;
+        bookkeep[indx + i].first_free = NULL;
+        // list_crop(&bookkeep[indx + i].list, &bookkeep[indx + i].list);
     };
+    printf("reserve indx: %d, page: %d\n", indx, page);
 }

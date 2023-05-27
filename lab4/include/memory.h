@@ -7,7 +7,7 @@
 #define PAGE_SIZE (1 << PAGE_SHIFT)           // 4096
 #define MAX_BUDDY_ORDER 9                     //
 #define MAX_BLOCK_SIZE (1 << MAX_BUDDY_ORDER) // 512
-#define MAX_PAGE_NUMBER 4096
+#define MAX_PAGE_NUMBER (0x3C000000 / PAGE_SIZE)
 
 #define MIN_OBJECT_ORDER 4                                           // 16 bytes
 #define MAX_OBJECT_ORDER 11                                          // 2048 bytes
