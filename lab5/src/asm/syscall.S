@@ -79,5 +79,5 @@ disable_core_timer:
 .global set_timeout
 set_timeout:
     mov x8, SYS_SET_TIMEOUT
-    svc 2
+    svc 0
     ret
