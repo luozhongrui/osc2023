@@ -8,7 +8,7 @@
 
 #define MBOX_CH_PROP 8
 
-//The following code is for mailbox initialize used in lab7.
+// The following code is for mailbox initialize used in lab7.
 unsigned int width, height, pitch, isrgb; /* dimensions and channel order */
 unsigned char *lfb;                       /* raw frame buffer address */
 
@@ -16,7 +16,7 @@ struct file_operations dev_framebuffer_operations = {dev_framebuffer_write, (voi
 
 int init_dev_framebuffer()
 {
-    //The following code is for mailbox initialize used in lab7.
+    // The following code is for mailbox initialize used in lab7.
     pt[0] = 35 * 4;
     pt[1] = MBOX_TAG_REQUEST_CODE;
 

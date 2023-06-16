@@ -5,7 +5,7 @@
 #include "cpio.h"
 #include "uart1.h"
 
-struct file_operations initramfs_file_operations = {initramfs_write, initramfs_read, initramfs_open, initramfs_close, initramfs_lseek64,initramfs_getsize};
+struct file_operations initramfs_file_operations = {initramfs_write, initramfs_read, initramfs_open, initramfs_close, initramfs_lseek64, initramfs_getsize};
 struct vnode_operations initramfs_vnode_operations = {initramfs_lookup, initramfs_create, initramfs_mkdir};
 
 int register_initramfs()
@@ -33,18 +33,18 @@ int initramfs_setup_mount(struct filesystem *fs, struct mount *_mount)
     while (header_pointer != 0)
     {
         int error = cpio_newc_parse_header(header_pointer, &filepath, &filesize, &filedata, &header_pointer);
-        //if parse header error
+        // if parse header error
         if (error)
         {
             uart_sendline("%s", "error\r\n");
             break;
         }
 
-        //if this is not TRAILER!!! (last of file)
+        // if this is not TRAILER!!! (last of file)
         if (header_pointer != 0)
         {
             // only support file (no dir)
-            struct vnode * filevnode = initramfs_create_vnode(0, file_t);
+            struct vnode *filevnode = initramfs_create_vnode(0, file_t);
             struct initramfs_inode *fileinode = filevnode->internal;
             fileinode->data = filedata;
             fileinode->datasize = filesize;
@@ -128,7 +128,8 @@ int initramfs_lookup(struct vnode *dir_node, struct vnode **target, const char *
     for (; child_idx < INITRAMFS_MAX_DIR_ENTRY; child_idx++)
     {
         struct vnode *vnode = dir_inode->entry[child_idx];
-        if (!vnode)break;
+        if (!vnode)
+            break;
         struct initramfs_inode *inode = vnode->internal;
         if (strcmp(component_name, inode->name) == 0)
         {

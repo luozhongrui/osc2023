@@ -19,19 +19,12 @@ void main(char *arg)
 
     uart_init();
     irqtask_init_list();
-    uart_puts("Hello world!\n ");
     timer_list_init();
-    uart_puts("Hello world!\n ");
     init_thread_sched();
-    uart_puts("Hello world!\n ");
     init_rootfs();
-    uart_puts("Hello world!\n ");
     uart_interrupt_enable();
-    uart_puts("Hello world!\n ");
     el1_interrupt_enable(); // enable interrupt in EL1 -> EL1
-    uart_puts("Hello world!\n ");
     core_timer_enable();
-    uart_puts("Hello world!\n ");
 
 #if DEBUG
     cli_cmd_read(input_buffer); // Wait for input, Windows cannot attach to SERIAL from two processes.

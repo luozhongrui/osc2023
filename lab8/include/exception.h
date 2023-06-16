@@ -5,9 +5,9 @@
 
 #define CORE0_INTERRUPT_SOURCE ((volatile unsigned int *)(PHYS_TO_VIRT(0x40000060)))
 
-#define IRQ_PENDING_1_AUX_INT (1<<29)
-#define INTERRUPT_SOURCE_GPU (1<<8)
-#define INTERRUPT_SOURCE_CNTPNSIRQ (1<<1)
+#define IRQ_PENDING_1_AUX_INT (1 << 29)
+#define INTERRUPT_SOURCE_GPU (1 << 8)
+#define INTERRUPT_SOURCE_CNTPNSIRQ (1 << 1)
 
 typedef struct trapframe
 {
@@ -55,10 +55,11 @@ typedef struct trapframe
 #define TF_LEVEL2 0b000110
 #define TF_LEVEL3 0b000111
 
-typedef struct{
+typedef struct
+{
     unsigned int iss : 25, // Instruction specific syndrome
-                 il : 1,   // Instruction length bit
-                 ec : 6;   // Exception class
+        il : 1,            // Instruction length bit
+        ec : 6;            // Exception class
 } esr_el1_t;
 
 void sync_64_router(trapframe_t *tpf);

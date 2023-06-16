@@ -4,7 +4,7 @@
 #include "list.h"
 
 // smaller is more preemptive
-#define UART_IRQ_PRIORITY  1
+#define UART_IRQ_PRIORITY 1
 #define TIMER_IRQ_PRIORITY 0
 
 typedef struct irqtask

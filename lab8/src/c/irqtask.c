@@ -12,9 +12,10 @@ void irqtask_init_list()
     INIT_LIST_HEAD(task_list);
 }
 
-void irqtask_add(void *task_function,unsigned long long priority){
+void irqtask_add(void *task_function, unsigned long long priority)
+{
 
-    irqtask_t *the_task = kmalloc(sizeof(irqtask_t)); //need to kfree by task runner
+    irqtask_t *the_task = kmalloc(sizeof(irqtask_t)); // need to kfree by task runner
     the_task->priority = priority;
     the_task->task_function = task_function;
 
@@ -28,11 +29,13 @@ void irqtask_add(void *task_function,unsigned long long priority){
             break;
         }
     }
-    if (list_is_head(curr, task_list)) list_add_tail(&(the_task->listhead), task_list); // for the time is the biggest
+    if (list_is_head(curr, task_list))
+        list_add_tail(&(the_task->listhead), task_list); // for the time is the biggest
     unlock();
 }
 
-void irqtask_run_preemptive(){
+void irqtask_run_preemptive()
+{
     while (1)
     {
         lock();

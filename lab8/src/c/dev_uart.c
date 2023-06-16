@@ -13,7 +13,7 @@ int init_dev_uart()
 int dev_uart_write(struct file *file, const void *buf, size_t len)
 {
     const char *cbuf = buf;
-    for (int i = 0; i < len;i++)
+    for (int i = 0; i < len; i++)
     {
         uart_async_putc(cbuf[i]);
     }

@@ -7,9 +7,10 @@
 #define BLOCK_SIZE 512
 #define CLUSTER_ENTRY_PER_BLOCK (BLOCK_SIZE / sizeof(struct cluster_entry_t))
 #define DIR_PER_BLOCK (BLOCK_SIZE / sizeof(struct dir_t))
-#define INVALID_CID 0x0ffffff8  // Last cluster in file (EOC), reserved by FAT32
+#define INVALID_CID 0x0ffffff8 // Last cluster in file (EOC), reserved by FAT32
 
-struct partition_t {
+struct partition_t
+{
     unsigned char status;
     unsigned char chss_head;
     unsigned char chss_sector;
@@ -22,7 +23,8 @@ struct partition_t {
     unsigned int sectors;
 } __attribute__((packed));
 
-struct boot_sector_t {
+struct boot_sector_t
+{
     unsigned char jmpboot[3];
     unsigned char oemname[8];
     unsigned short bytes_per_sector;
@@ -52,25 +54,27 @@ struct boot_sector_t {
     unsigned char fstype[8];
 } __attribute__((packed));
 
-struct fat_info_t {
+struct fat_info_t
+{
     struct boot_sector_t bs;  // boot_sector from MBR Partition Table
     unsigned int fat_lba;     // FAT  Region in FAT   fs Definition
     unsigned int cluster_lba; // Data Region in FAT32 fs Definition
 };
 
 // attr of dir_t
-#define ATTR_READ_ONLY  0x01
-#define ATTR_HIDDEN     0x02
-#define ATTR_SYSTEM     0x04
-#define ATTR_VOLUME_ID  0x08
-#define ATTR_LFN        0x0f
-#define ATTR_DIRECTORY  0x10
-#define ATTR_ARCHIVE    0x20
+#define ATTR_READ_ONLY 0x01
+#define ATTR_HIDDEN 0x02
+#define ATTR_SYSTEM 0x04
+#define ATTR_VOLUME_ID 0x08
+#define ATTR_LFN 0x0f
+#define ATTR_DIRECTORY 0x10
+#define ATTR_ARCHIVE 0x20
 #define ATTR_FILE_DIR_MASK (ATTR_DIRECTORY | ATTR_ARCHIVE)
 
 // Directory structure for FAT SFN
 // http://elm-chan.org/docs/fat_e.html
-struct dir_t {
+struct dir_t
+{
     unsigned char name[11];
     unsigned char attr;
     unsigned char ntres;
@@ -87,7 +91,8 @@ struct dir_t {
 
 // Directory structure for FAT LFN
 // https://blog.csdn.net/ZCShouCSDN/article/details/97610903
-struct long_dir_t {
+struct long_dir_t
+{
     unsigned char order;
     unsigned char name1[10];
     unsigned char attr;
@@ -98,67 +103,79 @@ struct long_dir_t {
     unsigned char name3[4];
 } __attribute__((packed));
 
-struct cluster_entry_t {
-    union {
+struct cluster_entry_t
+{
+    union
+    {
         unsigned int val;
-        struct {
-            unsigned int idx: 28;
-            unsigned int reserved: 4;
+        struct
+        {
+            unsigned int idx : 28;
+            unsigned int reserved : 4;
         };
     };
 };
 
-struct filename_t {
-    union {
+struct filename_t
+{
+    union
+    {
         unsigned char fullname[256];
-        struct {
+        struct
+        {
             unsigned char name[13];
         } part[20];
     };
 } __attribute__((packed));
 
-struct fat_file_block_t {
+struct fat_file_block_t
+{
     /* Link fat_file_block_t */
     struct list_head list;
-    unsigned int oid;     // offset if of file, N = offset N* BLOCK_SIZE of file
-    unsigned int cid;     // cluster id
+    unsigned int oid; // offset if of file, N = offset N* BLOCK_SIZE of file
+    unsigned int cid; // cluster id
     unsigned int bufIsUpdated;
     unsigned int isDirty;
     unsigned char buf[BLOCK_SIZE];
 };
 
-struct fat_file_t {
+struct fat_file_t
+{
     /* Head of fat_file_block_t chain */
     struct list_head list;
     unsigned int size;
 };
 
-struct fat_dir_t {
+struct fat_dir_t
+{
     /* Head of fat32_inode chain */
     struct list_head list;
 };
 
-struct fat_mount_t {
+struct fat_mount_t
+{
     /* Link fat_mount_t */
     struct list_head list;
     struct mount *mount;
 };
 
 // type of struct fat32_inode
-#define FAT_DIR     1
-#define FAT_FILE    2
+#define FAT_DIR 1
+#define FAT_FILE 2
 
-struct fat32_inode {
-    const char        *name;
-    struct vnode      *node; // redirect to vnode
+struct fat32_inode
+{
+    const char *name;
+    struct vnode *node; // redirect to vnode
     struct fat_info_t *fat;
     /* Link fat32_inode */
-    struct list_head  list;
+    struct list_head list;
     /* cluster id */
-    unsigned int      cid;  // cluster id
-    unsigned int      type;
-    union {
-        struct fat_dir_t  *dir;
+    unsigned int cid; // cluster id
+    unsigned int type;
+    union
+    {
+        struct fat_dir_t *dir;
         struct fat_file_t *file;
     };
 };
@@ -173,21 +190,21 @@ int fat32_isdir(struct vnode *dir_node);
 int fat32_getname(struct vnode *dir_node, const char **name);
 int fat32_getsize(struct vnode *dir_node);
 
-int  fat32_write(struct file *file, const void *buf, size_t len);
-int  fat32_read(struct file *file, void *buf, size_t len);
-int  fat32_open(struct vnode *file_node, struct file **target);
-int  fat32_close(struct file *file);
+int fat32_write(struct file *file, const void *buf, size_t len);
+int fat32_read(struct file *file, void *buf, size_t len);
+int fat32_open(struct vnode *file_node, struct file **target);
+int fat32_close(struct file *file);
 long fat32_lseek64(struct file *file, long offset, int whence);
-int  fat32_sync(struct filesystem *fs);
+int fat32_sync(struct filesystem *fs);
 
 unsigned int alloc_cluster(struct fat_info_t *fat, unsigned int prev_cid);
 unsigned int get_next_cluster(unsigned int fat_lba, unsigned int cluster_id);
 
 struct vnode *_create_vnode(struct vnode *parent, const char *name, unsigned int type, unsigned int cid, unsigned int size);
 
-int            _lookup_cache(struct vnode *dir_node, struct vnode **target, const char *component_name);
-struct dir_t* __lookup_fat32(struct vnode *dir_node, const char *component_name, unsigned char *buf, int *buflba);
-int            _lookup_fat32(struct vnode *dir_node, struct vnode **target, const char *component_name);
+int _lookup_cache(struct vnode *dir_node, struct vnode **target, const char *component_name);
+struct dir_t *__lookup_fat32(struct vnode *dir_node, const char *component_name, unsigned char *buf, int *buflba);
+int _lookup_fat32(struct vnode *dir_node, struct vnode **target, const char *component_name);
 
 int _readfile(void *buf, struct fat32_inode *data, unsigned long long fileoff, unsigned long long len);
 int _readfile_fat32(struct fat32_inode *data, unsigned long long bckoff, unsigned char *buf, unsigned int bufoff, unsigned int size, unsigned int oid, unsigned int cid);
