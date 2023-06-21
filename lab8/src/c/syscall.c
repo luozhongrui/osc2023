@@ -11,16 +11,16 @@
 #include "string.h"
 #include "dev_framebuffer.h"
 
-int getpid(trapframe_t* tpf)
+int getpid(trapframe_t *tpf)
 {
     tpf->x0 = curr_thread->pid;
     return curr_thread->pid;
 }
 
-size_t uartread(trapframe_t *tpf,char buf[], size_t size)
+size_t uartread(trapframe_t *tpf, char buf[], size_t size)
 {
     int i = 0;
-    for (int i = 0; i < size;i++)
+    for (int i = 0; i < size; i++)
     {
         buf[i] = uart_async_getc();
     }
@@ -28,7 +28,7 @@ size_t uartread(trapframe_t *tpf,char buf[], size_t size)
     return i;
 }
 
-size_t uartwrite(trapframe_t *tpf,const char buf[], size_t size)
+size_t uartwrite(trapframe_t *tpf, const char buf[], size_t size)
 {
     int i = 0;
     for (int i = 0; i < size; i++)
@@ -39,8 +39,8 @@ size_t uartwrite(trapframe_t *tpf,const char buf[], size_t size)
     return i;
 }
 
-//In this lab, you won’t have to deal with argument passing
-int exec(trapframe_t *tpf,const char *name, char *const argv[])
+// In this lab, you won’t have to deal with argument passing
+int exec(trapframe_t *tpf, const char *name, char *const argv[])
 {
     mmu_del_vma(curr_thread);
     INIT_LIST_HEAD(&curr_thread->vma_list);
@@ -51,25 +51,25 @@ int exec(trapframe_t *tpf,const char *name, char *const argv[])
     get_absolute_path(abs_path, curr_thread->curr_working_dir);
 
     struct vnode *target_file;
-    vfs_lookup(abs_path,&target_file);
+    vfs_lookup(abs_path, &target_file);
     curr_thread->datasize = target_file->f_ops->getsize(target_file);
 
     curr_thread->data = kmalloc(curr_thread->datasize);
     curr_thread->stack_alloced_ptr = kmalloc(USTACK_SIZE);
 
-    asm("dsb ish\n\t");      // ensure write has completed
+    asm("dsb ish\n\t"); // ensure write has completed
     mmu_free_page_tables(curr_thread->context.pgd, 0);
     memset(PHYS_TO_VIRT(curr_thread->context.pgd), 0, 0x1000);
     asm("tlbi vmalle1is\n\t" // invalidate all TLB entries
         "dsb ish\n\t"        // ensure completion of TLB invalidatation
         "isb\n\t");          // clear pipeline
 
-    mmu_add_vma(curr_thread,              USER_KERNEL_BASE,             curr_thread->datasize, (size_t)VIRT_TO_PHYS(curr_thread->data)             , 0b111, 1);
-    mmu_add_vma(curr_thread, USER_STACK_BASE - USTACK_SIZE,                       USTACK_SIZE, (size_t)VIRT_TO_PHYS(curr_thread->stack_alloced_ptr), 0b111, 1);
-    mmu_add_vma(curr_thread,              PERIPHERAL_START, PERIPHERAL_END - PERIPHERAL_START,                                     PERIPHERAL_START, 0b011, 0);
-    mmu_add_vma(curr_thread,        USER_SIGNAL_WRAPPER_VA,                            0x2000,         (size_t)VIRT_TO_PHYS(signal_handler_wrapper), 0b101, 0);
+    mmu_add_vma(curr_thread, USER_KERNEL_BASE, curr_thread->datasize, (size_t)VIRT_TO_PHYS(curr_thread->data), 0b111, 1);
+    mmu_add_vma(curr_thread, USER_STACK_BASE - USTACK_SIZE, USTACK_SIZE, (size_t)VIRT_TO_PHYS(curr_thread->stack_alloced_ptr), 0b111, 1);
+    mmu_add_vma(curr_thread, PERIPHERAL_START, PERIPHERAL_END - PERIPHERAL_START, PERIPHERAL_START, 0b011, 0);
+    mmu_add_vma(curr_thread, USER_SIGNAL_WRAPPER_VA, 0x2000, (size_t)VIRT_TO_PHYS(signal_handler_wrapper), 0b101, 0);
 
-    //memcpy(curr_thread->data, new_data, curr_thread->datasize);
+    // memcpy(curr_thread->data, new_data, curr_thread->datasize);
     struct file *f;
     vfs_open(abs_path, 0, &f);
     vfs_read(f, curr_thread->data, curr_thread->datasize);
@@ -80,7 +80,6 @@ int exec(trapframe_t *tpf,const char *name, char *const argv[])
         curr_thread->signal_handler[i] = signal_default_handler;
     }
 
-
     tpf->elr_el1 = USER_KERNEL_BASE;
     tpf->sp_el0 = USER_STACK_BASE;
     tpf->x0 = 0;
@@ -90,10 +89,10 @@ int exec(trapframe_t *tpf,const char *name, char *const argv[])
 int fork(trapframe_t *tpf)
 {
     lock();
-    thread_t *newt = thread_create(curr_thread->data,curr_thread->datasize);
+    thread_t *newt = thread_create(curr_thread->data, curr_thread->datasize);
 
-    //copy signal handler
-    for (int i = 0; i <= SIGNAL_MAX;i++)
+    // copy signal handler
+    for (int i = 0; i <= SIGNAL_MAX; i++)
     {
         newt->signal_handler[i] = curr_thread->signal_handler[i];
     }
@@ -109,7 +108,8 @@ int fork(trapframe_t *tpf)
 
     list_head_t *pos;
     vm_area_struct_t *vma;
-    list_for_each(pos, &curr_thread->vma_list){
+    list_for_each(pos, &curr_thread->vma_list)
+    {
         // ignore device and signal wrapper
         vma = (vm_area_struct_t *)pos;
         if (vma->virt_addr == USER_SIGNAL_WRAPPER_VA || vma->virt_addr == PERIPHERAL_START)
@@ -118,22 +118,22 @@ int fork(trapframe_t *tpf)
         }
         char *new_alloc = kmalloc(vma->area_size);
         mmu_add_vma(newt, vma->virt_addr, vma->area_size, (size_t)VIRT_TO_PHYS(new_alloc), vma->rwx, 1);
-        memcpy(new_alloc, (void*)PHYS_TO_VIRT(vma->phys_addr), vma->area_size);
+        memcpy(new_alloc, (void *)PHYS_TO_VIRT(vma->phys_addr), vma->area_size);
     }
-    mmu_add_vma(newt,       PERIPHERAL_START, PERIPHERAL_END - PERIPHERAL_START,                             PERIPHERAL_START, 0b011, 0);
-    mmu_add_vma(newt, USER_SIGNAL_WRAPPER_VA,                            0x2000, (size_t)VIRT_TO_PHYS(signal_handler_wrapper), 0b101, 0);
+    mmu_add_vma(newt, PERIPHERAL_START, PERIPHERAL_END - PERIPHERAL_START, PERIPHERAL_START, 0b011, 0);
+    mmu_add_vma(newt, USER_SIGNAL_WRAPPER_VA, 0x2000, (size_t)VIRT_TO_PHYS(signal_handler_wrapper), 0b101, 0);
 
     int parent_pid = curr_thread->pid;
 
-    //copy stack into new process
+    // copy stack into new process
     for (int i = 0; i < KSTACK_SIZE; i++)
     {
         newt->kernel_stack_alloced_ptr[i] = curr_thread->kernel_stack_alloced_ptr[i];
     }
 
     store_context(get_current());
-    //for child
-    if( parent_pid != curr_thread->pid)
+    // for child
+    if (parent_pid != curr_thread->pid)
     {
         goto child;
     }
@@ -173,10 +173,10 @@ int syscall_mbox_call(trapframe_t *tpf, unsigned char ch, unsigned int *mbox_use
     return 0;
 }
 
-void kill(trapframe_t *tpf,int pid)
+void kill(trapframe_t *tpf, int pid)
 {
     lock();
-    if (pid >= PIDMAX || pid < 0  || !threads[pid].isused)
+    if (pid >= PIDMAX || pid < 0 || !threads[pid].isused)
     {
         unlock();
         return;
@@ -188,21 +188,23 @@ void kill(trapframe_t *tpf,int pid)
 
 void signal_register(int signal, void (*handler)())
 {
-    if (signal > SIGNAL_MAX || signal < 0)return;
+    if (signal > SIGNAL_MAX || signal < 0)
+        return;
 
     curr_thread->signal_handler[signal] = handler;
 }
 
 void signal_kill(int pid, int signal)
 {
-    if (pid > PIDMAX || pid < 0 || !threads[pid].isused)return;
+    if (pid > PIDMAX || pid < 0 || !threads[pid].isused)
+        return;
 
     lock();
     threads[pid].sigcount[signal]++;
     unlock();
 }
 
-//only need to implement the anonymous page mapping in this Lab.
+// only need to implement the anonymous page mapping in this Lab.
 void *mmap(trapframe_t *tpf, void *addr, size_t len, int prot, int flags, int fd, int file_offset)
 {
     // Ignore flags as we have demand pages
@@ -219,7 +221,7 @@ void *mmap(trapframe_t *tpf, void *addr, size_t len, int prot, int flags, int fd
     {
         vma = (vm_area_struct_t *)pos;
         // Detect existing vma overlapped
-        if ( ! (vma->virt_addr >= (unsigned long)(addr + len) || vma->virt_addr + vma->area_size <= (unsigned long)addr ) )
+        if (!(vma->virt_addr >= (unsigned long)(addr + len) || vma->virt_addr + vma->area_size <= (unsigned long)addr))
         {
             the_area_ptr = vma;
             break;
@@ -228,15 +230,14 @@ void *mmap(trapframe_t *tpf, void *addr, size_t len, int prot, int flags, int fd
     // take as a hint to decide new region's start address
     if (the_area_ptr)
     {
-        tpf->x0 = (unsigned long) mmap(tpf, (void *)(the_area_ptr->virt_addr + the_area_ptr->area_size), len, prot, flags, fd, file_offset);
+        tpf->x0 = (unsigned long)mmap(tpf, (void *)(the_area_ptr->virt_addr + the_area_ptr->area_size), len, prot, flags, fd, file_offset);
         return (void *)tpf->x0;
     }
     // create new valid region, map and set the page attributes (prot)
     mmu_add_vma(curr_thread, (unsigned long)addr, len, VIRT_TO_PHYS((unsigned long)kmalloc(len)), prot, 1);
     tpf->x0 = (unsigned long)addr;
-    return (void*)tpf->x0;
+    return (void *)tpf->x0;
 }
-
 
 int open(trapframe_t *tpf, const char *pathname, int flags)
 {
@@ -245,9 +246,9 @@ int open(trapframe_t *tpf, const char *pathname, int flags)
     get_absolute_path(abs_path, curr_thread->curr_working_dir);
     for (int i = 0; i < MAX_FD; i++)
     {
-        if(!curr_thread->file_descriptors_table[i])
+        if (!curr_thread->file_descriptors_table[i])
         {
-            if(vfs_open(abs_path, flags, &curr_thread->file_descriptors_table[i])!=0)
+            if (vfs_open(abs_path, flags, &curr_thread->file_descriptors_table[i]) != 0)
             {
                 break;
             }
@@ -263,7 +264,7 @@ int open(trapframe_t *tpf, const char *pathname, int flags)
 
 int close(trapframe_t *tpf, int fd)
 {
-    if(curr_thread->file_descriptors_table[fd])
+    if (curr_thread->file_descriptors_table[fd])
     {
         vfs_close(curr_thread->file_descriptors_table[fd]);
         curr_thread->file_descriptors_table[fd] = 0;
@@ -314,7 +315,7 @@ int mount(trapframe_t *tpf, const char *src, const char *target, const char *fil
     strcpy(abs_path, target);
     get_absolute_path(abs_path, curr_thread->curr_working_dir);
 
-    tpf->x0 = vfs_mount(abs_path,filesystem);
+    tpf->x0 = vfs_mount(abs_path, filesystem);
     return tpf->x0;
 }
 
@@ -330,7 +331,7 @@ int chdir(trapframe_t *tpf, const char *path)
 
 long lseek64(trapframe_t *tpf, int fd, long offset, int whence)
 {
-    if(whence == SEEK_SET)
+    if (whence == SEEK_SET)
     {
         curr_thread->file_descriptors_table[fd]->f_pos = offset;
         tpf->x0 = offset;
@@ -348,7 +349,7 @@ extern unsigned int pitch;
 extern unsigned int width;
 int ioctl(trapframe_t *tpf, int fb, unsigned long request, void *info)
 {
-    if(request == 0)
+    if (request == 0)
     {
         struct framebuffer_info *fb_info = info;
         fb_info->height = height;
@@ -363,9 +364,10 @@ int ioctl(trapframe_t *tpf, int fb, unsigned long request, void *info)
 
 int sync(trapframe_t *tpf)
 {
-    for (int i = 0; i < MAX_FS_REG;i++)
+    for (int i = 0; i < MAX_FS_REG; i++)
     {
-        if(!reg_fs[i].name) continue;
+        if (!reg_fs[i].name)
+            continue;
         vfs_sync(&reg_fs[i]);
     }
     tpf->x0 = 0;
@@ -374,15 +376,12 @@ int sync(trapframe_t *tpf)
 
 void sigreturn(trapframe_t *tpf)
 {
-    //unsigned long signal_ustack = tpf->sp_el0 % USTACK_SIZE == 0 ? tpf->sp_el0 - USTACK_SIZE : tpf->sp_el0 & (~(USTACK_SIZE - 1));
-    //kfree((char*)signal_ustack);
+    // unsigned long signal_ustack = tpf->sp_el0 % USTACK_SIZE == 0 ? tpf->sp_el0 - USTACK_SIZE : tpf->sp_el0 & (~(USTACK_SIZE - 1));
+    // kfree((char*)signal_ustack);
     load_context(&curr_thread->signal_saved_context);
 }
 
-
-
-
-char* get_file_start(char *thefilepath)
+char *get_file_start(char *thefilepath)
 {
     char *filepath;
     char *filedata;
@@ -392,9 +391,12 @@ char* get_file_start(char *thefilepath)
     while (header_pointer != 0)
     {
         int error = cpio_newc_parse_header(header_pointer, &filepath, &filesize, &filedata, &header_pointer);
-        if (error) break;
-        if (strcmp(thefilepath, filepath) == 0) return filedata;
-        if (header_pointer == 0) uart_puts("execfile: %s: No such file or directory\r\n", thefilepath);
+        if (error)
+            break;
+        if (strcmp(thefilepath, filepath) == 0)
+            return filedata;
+        if (header_pointer == 0)
+            uart_puts("execfile: %s: No such file or directory\r\n", thefilepath);
     }
     return 0;
 }
@@ -409,10 +411,12 @@ unsigned int get_file_size(char *thefilepath)
     while (header_pointer != 0)
     {
         int error = cpio_newc_parse_header(header_pointer, &filepath, &filesize, &filedata, &header_pointer);
-        if (error) break;
-        if (strcmp(thefilepath, filepath) == 0) return filesize;
-        if (header_pointer == 0) uart_puts("execfile: %s: No such file or directory\r\n", thefilepath);
+        if (error)
+            break;
+        if (strcmp(thefilepath, filepath) == 0)
+            return filesize;
+        if (header_pointer == 0)
+            uart_puts("execfile: %s: No such file or directory\r\n", thefilepath);
     }
     return 0;
 }
-

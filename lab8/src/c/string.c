@@ -1,119 +1,145 @@
 #include "string.h"
 #include <stddef.h>
 
-unsigned int vsprintf(char *dst, char* fmt, __builtin_va_list args)
+unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args)
 {
     long int arg;
     int len, sign, i;
-    char *p, *orig=dst, tmpstr[19];
+    char *p, *orig = dst, tmpstr[19];
 
     // failsafes
-    if(dst==(void*)0 || fmt==(void*)0) {
+    if (dst == (void *)0 || fmt == (void *)0)
+    {
         return 0;
     }
 
     // main loop
     arg = 0;
-    while(*fmt) {
-        if(dst-orig > VSPRINT_MAX_BUF_SIZE-0x10)
+    while (*fmt)
+    {
+        if (dst - orig > VSPRINT_MAX_BUF_SIZE - 0x10)
         {
             return -1;
         }
         // argument access
-        if(*fmt=='%') {
+        if (*fmt == '%')
+        {
             fmt++;
             // literal %
-            if(*fmt=='%') {
+            if (*fmt == '%')
+            {
                 goto put;
             }
-            len=0;
+            len = 0;
             // size modifier
-            while(*fmt>='0' && *fmt<='9') {
+            while (*fmt >= '0' && *fmt <= '9')
+            {
                 len *= 10;
-                len += *fmt-'0';
+                len += *fmt - '0';
                 fmt++;
             }
             // skip long modifier
-            if(*fmt=='l') {
+            if (*fmt == 'l')
+            {
                 fmt++;
             }
             // character
-            if(*fmt=='c') {
+            if (*fmt == 'c')
+            {
                 arg = __builtin_va_arg(args, int);
                 *dst++ = (char)arg;
                 fmt++;
                 continue;
-            } else
-            // decimal number
-            if(*fmt=='d') {
-                arg = __builtin_va_arg(args, int);
-                // check input
-                sign=0;
-                if((int)arg<0) {
-                    arg*=-1;
-                    sign++;
-                }
-                if(arg>99999999999999999L) {
-                    arg=99999999999999999L;
-                }
-                // convert to string
-                i=18;
-                tmpstr[i]=0;
-                do {
-                    tmpstr[--i]='0'+(arg%10);
-                    arg/=10;
-                } while(arg!=0 && i>0);
-                if(sign) {
-                    tmpstr[--i]='-';
-                }
-                if(len>0 && len<18) {
-                    while(i>18-len) {
-                        tmpstr[--i]=' ';
-                    }
-                }
-                p=&tmpstr[i];
-                goto copystring;
-            } else
-            if(*fmt=='x') {
-                arg = __builtin_va_arg(args, long int);
-                i=16;
-                tmpstr[i]=0;
-                do {
-                    char n=arg & 0xf;
-                    tmpstr[--i]=n+(n>9?0x37:0x30);
-                    arg>>=4;
-                } while(arg!=0 && i>0);
-                if(len>0 && len<=16) {
-                    while(i>16-len) {
-                        tmpstr[--i]='0';
-                    }
-                }
-                p=&tmpstr[i];
-                goto copystring;
-            } else
-            if(*fmt=='s') {
-                p = __builtin_va_arg(args, char*);
-copystring:     if(p==(void*)0) {
-                    p="(null)";
-                }
-                while(*p) {
-                    *dst++ = *p++;
-                }
             }
-        } else {
-put:        *dst++ = *fmt;
+            else
+                // decimal number
+                if (*fmt == 'd')
+                {
+                    arg = __builtin_va_arg(args, int);
+                    // check input
+                    sign = 0;
+                    if ((int)arg < 0)
+                    {
+                        arg *= -1;
+                        sign++;
+                    }
+                    if (arg > 99999999999999999L)
+                    {
+                        arg = 99999999999999999L;
+                    }
+                    // convert to string
+                    i = 18;
+                    tmpstr[i] = 0;
+                    do
+                    {
+                        tmpstr[--i] = '0' + (arg % 10);
+                        arg /= 10;
+                    } while (arg != 0 && i > 0);
+                    if (sign)
+                    {
+                        tmpstr[--i] = '-';
+                    }
+                    if (len > 0 && len < 18)
+                    {
+                        while (i > 18 - len)
+                        {
+                            tmpstr[--i] = ' ';
+                        }
+                    }
+                    p = &tmpstr[i];
+                    goto copystring;
+                }
+                else if (*fmt == 'x')
+                {
+                    arg = __builtin_va_arg(args, long int);
+                    i = 16;
+                    tmpstr[i] = 0;
+                    do
+                    {
+                        char n = arg & 0xf;
+                        tmpstr[--i] = n + (n > 9 ? 0x37 : 0x30);
+                        arg >>= 4;
+                    } while (arg != 0 && i > 0);
+                    if (len > 0 && len <= 16)
+                    {
+                        while (i > 16 - len)
+                        {
+                            tmpstr[--i] = '0';
+                        }
+                    }
+                    p = &tmpstr[i];
+                    goto copystring;
+                }
+                else if (*fmt == 's')
+                {
+                    p = __builtin_va_arg(args, char *);
+                copystring:
+                    if (p == (void *)0)
+                    {
+                        p = "(null)";
+                    }
+                    while (*p)
+                    {
+                        *dst++ = *p++;
+                    }
+                }
+        }
+        else
+        {
+        put:
+            *dst++ = *fmt;
         }
         fmt++;
     }
-    *dst=0;
-    return dst-orig;
+    *dst = 0;
+    return dst - orig;
 }
 
-unsigned int sprintf(char *dst, char* fmt, ...)
+unsigned int sprintf(char *dst, char *fmt, ...)
 {
     __builtin_va_list args;
     __builtin_va_start(args, fmt);
-    unsigned int r = vsprintf(dst,fmt,args);
+    unsigned int r = vsprintf(dst, fmt, args);
     __builtin_va_end(args);
     return r;
 }
@@ -121,7 +147,8 @@ unsigned int sprintf(char *dst, char* fmt, ...)
 unsigned long long strlen(const char *str)
 {
     size_t count = 0;
-    while((unsigned char)*str++)count++;
+    while ((unsigned char)*str++)
+        count++;
     return count;
 }
 
@@ -131,11 +158,13 @@ char *strncat(char *dest, const char *src, int n)
 
     t = dest;
 
-    while (*t) {
+    while (*t)
+    {
         t++;
     }
 
-    while (n > 0 && *src) {
+    while (n > 0 && *src)
+    {
         *t = *src;
         t++;
         src++;
@@ -147,33 +176,38 @@ char *strncat(char *dest, const char *src, int n)
     return dest;
 }
 
-char* strcat (char *dest, const char *src)
+char *strcat(char *dest, const char *src)
 {
-  strcpy (dest + strlen (dest), src);
-  return dest;
+    strcpy(dest + strlen(dest), src);
+    return dest;
 }
 
 int strcasecmp(const char *s1, const char *s2)
 {
     char c1, c2;
 
-    while (1) {
+    while (1)
+    {
         c1 = *s1++;
         c2 = *s2++;
 
-        if (!c1 || !c2) {
+        if (!c1 || !c2)
+        {
             break;
         }
 
-        if ('A' <= c1 && c1 <= 'Z') {
+        if ('A' <= c1 && c1 <= 'Z')
+        {
             c1 |= 0x20;
         }
 
-        if ('A' <= c2 && c2 <= 'Z') {
+        if ('A' <= c2 && c2 <= 'Z')
+        {
             c2 |= 0x20;
         }
 
-        if (c1 != c2) {
+        if (c1 != c2)
+        {
             break;
         }
     }
@@ -181,21 +215,23 @@ int strcasecmp(const char *s1, const char *s2)
     return c1 - c2;
 }
 
-int strcmp(const char* p1, const char* p2)
+int strcmp(const char *p1, const char *p2)
 {
-    const unsigned char *s1 = (const unsigned char*) p1;
-    const unsigned char *s2 = (const unsigned char*) p2;
+    const unsigned char *s1 = (const unsigned char *)p1;
+    const unsigned char *s2 = (const unsigned char *)p2;
     unsigned char c1, c2;
 
-    do {
-        c1 = (unsigned char) *s1++;
-        c2 = (unsigned char) *s2++;
-        if ( c1 == '\0' ) return c1 - c2;
-    } while ( c1 == c2 );
+    do
+    {
+        c1 = (unsigned char)*s1++;
+        c2 = (unsigned char)*s2++;
+        if (c1 == '\0')
+            return c1 - c2;
+    } while (c1 == c2);
     return c1 - c2;
 }
 
-int strncmp (const char *s1, const char *s2, unsigned long long n)
+int strncmp(const char *s1, const char *s2, unsigned long long n)
 {
     unsigned char c1 = '\0';
     unsigned char c2 = '\0';
@@ -204,20 +240,20 @@ int strncmp (const char *s1, const char *s2, unsigned long long n)
         size_t n4 = n >> 2;
         do
         {
-            c1 = (unsigned char) *s1++;
-            c2 = (unsigned char) *s2++;
+            c1 = (unsigned char)*s1++;
+            c2 = (unsigned char)*s2++;
             if (c1 == '\0' || c1 != c2)
                 return c1 - c2;
-            c1 = (unsigned char) *s1++;
-            c2 = (unsigned char) *s2++;
+            c1 = (unsigned char)*s1++;
+            c2 = (unsigned char)*s2++;
             if (c1 == '\0' || c1 != c2)
                 return c1 - c2;
-            c1 = (unsigned char) *s1++;
-            c2 = (unsigned char) *s2++;
+            c1 = (unsigned char)*s1++;
+            c2 = (unsigned char)*s2++;
             if (c1 == '\0' || c1 != c2)
                 return c1 - c2;
-            c1 = (unsigned char) *s1++;
-            c2 = (unsigned char) *s2++;
+            c1 = (unsigned char)*s1++;
+            c2 = (unsigned char)*s2++;
             if (c1 == '\0' || c1 != c2)
                 return c1 - c2;
         } while (--n4 > 0);
@@ -225,8 +261,8 @@ int strncmp (const char *s1, const char *s2, unsigned long long n)
     }
     while (n > 0)
     {
-        c1 = (unsigned char) *s1++;
-        c2 = (unsigned char) *s2++;
+        c1 = (unsigned char)*s1++;
+        c2 = (unsigned char)*s2++;
         if (c1 == '\0' || c1 != c2)
             return c1 - c2;
         n--;
@@ -234,7 +270,7 @@ int strncmp (const char *s1, const char *s2, unsigned long long n)
     return c1 - c2;
 }
 
-char* memcpy(void *dest, const void *src, unsigned long long len)
+char *memcpy(void *dest, const void *src, unsigned long long len)
 {
     char *d = dest;
     const char *s = src;
@@ -243,43 +279,45 @@ char* memcpy(void *dest, const void *src, unsigned long long len)
     return dest;
 }
 
-char* strcpy (char *dest, const char *src)
+char *strcpy(char *dest, const char *src)
 {
-    return memcpy (dest, src, strlen (src) + 1);
+    return memcpy(dest, src, strlen(src) + 1);
 }
 
 void *memset(void *s, int c, size_t n)
 {
-  char *start = s;
-  for (size_t i = 0; i < n; i++)
-  {
-    start[i] = c;
-  }
+    char *start = s;
+    for (size_t i = 0; i < n; i++)
+    {
+        start[i] = c;
+    }
 
-  return s;
+    return s;
 }
 
-char* strchr (register const char *s, int c)
+char *strchr(register const char *s, int c)
 {
-  do {
-    if (*s == c)
-      {
-        return (char*)s;
-      }
-  } while (*s++);
-  return (0);
+    do
+    {
+        if (*s == c)
+        {
+            return (char *)s;
+        }
+    } while (*s++);
+    return (0);
 }
 
-char* str_SepbySpace(char* head)
+char *str_SepbySpace(char *head)
 {
-    char* end;
-    while(1){
-        if(*head == '\0')
+    char *end;
+    while (1)
+    {
+        if (*head == '\0')
         {
             end = head;
             break;
         }
-        if(*head == ' ')
+        if (*head == ' ')
         {
             *head = '\0';
             end = head + 1;
@@ -291,7 +329,7 @@ char* str_SepbySpace(char* head)
 }
 
 // A simple atoi() function
-int atoi(char* str)
+int atoi(char *str)
 {
     // Initialize result
     int res = 0;
@@ -304,7 +342,8 @@ int atoi(char* str)
     // digits left to update running total
     for (int i = 0; str[i] != '\0'; ++i)
     {
-        if(str[i] > '9' || str[i] < '0')return res;
+        if (str[i] > '9' || str[i] < '0')
+            return res;
         res = res * 10 + str[i] - '0';
     }
 
